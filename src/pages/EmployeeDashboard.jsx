@@ -49,46 +49,46 @@ export default function EmployeeDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
-      <div className="relative py-3 sm:max-w-xl sm:mx-auto">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-        <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
-          <div className="max-w-md mx-auto">
-            <div className="divide-y divide-gray-200">
-              <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
-                <h2 className="text-2xl font-bold mb-8 text-center">Registro de Asistencia</h2>
-                
-                {message && (
-                  <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg">
-                    {message}
-                  </div>
-                )}
+    <div className="min-h-screen w-full bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
+      <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10">
+        <div className="mb-8">
+          <h2 className="text-3xl font-extrabold text-gray-900">
+            Registro de Asistencia
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Registra tu entrada y salida
+          </p>
+        </div>
 
-                {error && (
-                  <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
-                    {error}
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  <button
-                    onClick={() => handleAttendance('entrada')}
-                    disabled={loading}
-                    className="w-full py-3 px-6 text-white rounded-lg bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50"
-                  >
-                    {loading ? 'Procesando...' : 'Marcar Entrada'}
-                  </button>
-                  <button
-                    onClick={() => handleAttendance('salida')}
-                    disabled={loading}
-                    className="w-full py-3 px-6 text-white rounded-lg bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 disabled:opacity-50"
-                  >
-                    {loading ? 'Procesando...' : 'Marcar Salida'}
-                  </button>
-                </div>
-              </div>
+        <div className="mb-8">
+          {message && (
+            <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg">
+              {message}
             </div>
-          </div>
+          )}
+
+          {error && (
+            <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+              {error}
+            </div>
+          )}
+        </div>
+
+        <div className="mb-8">
+          <button
+            onClick={() => handleAttendance('entrada')}
+            disabled={loading}
+            className="w-full sm:w-auto px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+          >
+            {loading ? 'Procesando...' : 'Marcar Entrada'}
+          </button>
+          <button
+            onClick={() => handleAttendance('salida')}
+            disabled={loading}
+            className="w-full sm:w-auto px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+          >
+            {loading ? 'Procesando...' : 'Marcar Salida'}
+          </button>
         </div>
       </div>
     </div>
