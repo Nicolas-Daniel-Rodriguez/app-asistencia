@@ -49,8 +49,8 @@ export default function EmployeeDashboard() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
-      <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
+      <div className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10">
         <div className="mb-8">
           <h2 className="text-3xl font-extrabold text-gray-900">
             Registro de Asistencia
@@ -74,18 +74,18 @@ export default function EmployeeDashboard() {
           )}
         </div>
 
-        <div className="mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <button
             onClick={() => handleAttendance('entrada')}
             disabled={loading}
-            className="w-full sm:w-auto px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+            className="flex-1 px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
           >
             {loading ? 'Procesando...' : 'Marcar Entrada'}
           </button>
           <button
             onClick={() => handleAttendance('salida')}
             disabled={loading}
-            className="w-full sm:w-auto px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+            className="flex-1 px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
           >
             {loading ? 'Procesando...' : 'Marcar Salida'}
           </button>
