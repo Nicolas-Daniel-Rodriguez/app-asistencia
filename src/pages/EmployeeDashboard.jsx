@@ -49,7 +49,7 @@ export default function EmployeeDashboard() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
+    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
       <div className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10">
         <div className="mb-8">
           <h2 className="text-3xl font-extrabold text-gray-900">

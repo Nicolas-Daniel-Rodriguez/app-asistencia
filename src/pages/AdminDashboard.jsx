@@ -88,7 +88,7 @@ export default function AdminDashboard() {
   }, {});
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
+    <div className="h-screen w-screen bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
       <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10">
         <div className="mb-8">
           <h2 className="text-3xl font-extrabold text-gray-900">
