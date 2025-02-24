@@ -12,18 +12,24 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [employeeData, setEmployeeData] = useState({});
   const [activeTab, setActiveTab] = useState('attendance');
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   useEffect(() => {
     loadAttendanceData();
   }, [date]);
 
   const loadAttendanceData = async () => {
-    setLoading(true);
-    const { records, error } = await getAllEmployeesAttendance(date);
-    
-    if (error) {
-      setError(error);
-    } else {
+    try {
+      setLoading(true);
+      setError('');
+      const { records, error } = await getAllEmployeesAttendance(date);
+      
+      if (error) {
+        setError(error);
+        return;
+      }
+
       // Obtener información de los empleados
       const employeeInfo = {};
       for (const record of records) {
@@ -34,10 +40,15 @@ export default function AdminDashboard() {
           }
         }
       }
+
       setEmployeeData(employeeInfo);
       setAttendanceRecords(records);
+    } catch (err) {
+      console.error('Error loading attendance:', err);
+      setError('Error al cargar los registros de asistencia');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const formatDate = (timestamp) => {
@@ -77,10 +88,20 @@ export default function AdminDashboard() {
 
   const formatLocation = (location) => {
     if (!location) return '-';
-    return `${location.latitude}, ${location.longitude}`;
+    return (
+      <button
+        onClick={() => {
+          setSelectedLocation(location);
+          setIsMapModalOpen(true);
+        }}
+        className="text-indigo-600 hover:text-indigo-900 hover:underline"
+      >
+        {location.latitude}, {location.longitude}
+      </button>
+    );
   };
 
-  // Agrupar registros por empleado
+  // Agrupar registros por usuario
   const groupedRecords = attendanceRecords.reduce((acc, record) => {
     if (!acc[record.userId]) {
       acc[record.userId] = [];
@@ -90,7 +111,7 @@ export default function AdminDashboard() {
   }, {});
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
+    <div className="min-h-screen w-screen bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
       <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10">
         <div className="mb-8">
           <h2 className="text-3xl font-extrabold text-gray-900">
@@ -116,6 +137,51 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Modal del mapa */}
+        {isMapModalOpen && selectedLocation && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Ubicación del Registro
+                </h3>
+                <button
+                  onClick={() => setIsMapModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <span className="sr-only">Cerrar</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="aspect-w-16 aspect-h-9">
+                <iframe
+                  className="w-full h-[400px] rounded-md"
+                  frameBorder="0"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${selectedLocation.longitude-0.002},${selectedLocation.latitude-0.002},${selectedLocation.longitude+0.002},${selectedLocation.latitude+0.002}&layer=mapnik&marker=${selectedLocation.latitude},${selectedLocation.longitude}`}
+                ></iframe>
+              </div>
+
+              <div className="mt-4 text-sm text-gray-600">
+                <p>Latitud: {selectedLocation.latitude}</p>
+                <p>Longitud: {selectedLocation.longitude}</p>
+                <div className="mt-2 space-x-4">
+                  <a 
+                    href={`https://www.google.com/maps?q=${selectedLocation.latitude},${selectedLocation.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                  >
+                    Abrir en Google Maps
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Pestañas de navegación */}
         <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex space-x-8">
@@ -124,7 +190,7 @@ export default function AdminDashboard() {
               className={`${
                 activeTab === 'attendance'
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-700 hover:text-gray-800 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Asistencias
@@ -134,7 +200,7 @@ export default function AdminDashboard() {
               className={`${
                 activeTab === 'locations'
                   ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-700 hover:text-gray-800 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Ubicaciones
@@ -152,6 +218,10 @@ export default function AdminDashboard() {
             ) : error ? (
               <div className="text-red-500 text-sm text-center bg-red-50 p-4 rounded">
                 {error}
+              </div>
+            ) : Object.keys(groupedRecords).length === 0 ? (
+              <div className="text-gray-500 text-sm text-center bg-gray-50 p-4 rounded">
+                No hay registros de asistencia para esta fecha
               </div>
             ) : (
               <div className="bg-white shadow overflow-hidden sm:rounded-lg">

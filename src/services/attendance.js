@@ -107,10 +107,15 @@ export const getEmployeeAttendance = async (userId, date) => {
 
 export const getAllEmployeesAttendance = async (date) => {
   try {
-    const attendanceRef = collection(db, 'attendance');
+    // Convertir la fecha a timestamp de inicio y fin del día
+    const startDate = new Date(date + 'T00:00:00');
+    const endDate = new Date(date + 'T23:59:59');
+
+    // Crear la consulta para obtener los registros del día
     const q = query(
-      attendanceRef,
-      where('date', '==', date),
+      collection(db, 'attendance'),
+      where('timestamp', '>=', startDate),
+      where('timestamp', '<=', endDate),
       orderBy('timestamp', 'asc')
     );
 
@@ -118,11 +123,15 @@ export const getAllEmployeesAttendance = async (date) => {
     const records = [];
     
     querySnapshot.forEach((doc) => {
-      records.push({ id: doc.id, ...doc.data() });
+      records.push({
+        id: doc.id,
+        ...doc.data()
+      });
     });
 
-    return { records, error: null };
+    return { records };
   } catch (error) {
-    return { records: [], error: error.message };
+    console.error('Error getting attendance records:', error);
+    return { error: 'Error al obtener los registros de asistencia' };
   }
 };
