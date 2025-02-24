@@ -10,17 +10,42 @@ export default function EmployeeDashboard() {
 
   const getCurrentLocation = () => {
     if ("geolocation" in navigator) {
+      const options = {
+        enableHighAccuracy: true, // Solicita la mejor precisión posible
+        timeout: 10000,          // Tiempo máximo para obtener la ubicación (10 segundos)
+        maximumAge: 0            // Siempre obtener una posición nueva
+      };
+
       return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
           position => resolve({
             latitude: position.coords.latitude,
-            longitude: position.coords.longitude
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy, // Agregar la precisión para debugging
+            timestamp: position.timestamp      // Agregar el timestamp para debugging
           }),
-          error => reject(error)
+          error => {
+            let errorMessage;
+            switch(error.code) {
+              case error.PERMISSION_DENIED:
+                errorMessage = "Usuario denegó la solicitud de geolocalización.";
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMessage = "Información de ubicación no disponible.";
+                break;
+              case error.TIMEOUT:
+                errorMessage = "Se agotó el tiempo de espera para obtener la ubicación.";
+                break;
+              default:
+                errorMessage = "Error desconocido al obtener la ubicación.";
+            }
+            reject(new Error(errorMessage));
+          },
+          options
         );
       });
     } else {
-      return Promise.reject("Geolocalización no disponible");
+      return Promise.reject("Geolocalización no disponible en este dispositivo");
     }
   };
 
@@ -34,12 +59,15 @@ export default function EmployeeDashboard() {
       const location = await getCurrentLocation();
       
       // Registrar asistencia
-      const { error: attendanceError } = await registerAttendance(user.uid, type, location);
+      const { error: attendanceError, distance, locationName } = await registerAttendance(user.uid, type, location);
       
       if (attendanceError) {
         setError(attendanceError);
       } else {
-        setMessage(`Se ha registrado tu ${type} correctamente`);
+        setMessage(`Se ha registrado tu ${type} correctamente.
+          • Precisión GPS: ±${Math.round(location.accuracy)}m
+          • Ubicación: ${locationName}
+          • Distancia: ${distance}m`);
       }
     } catch (error) {
       setError('Error al obtener ubicación: ' + error.message);

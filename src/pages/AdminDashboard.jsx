@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getAllEmployeesAttendance } from '../services/attendance';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import LocationsManager from '../components/LocationsManager';
 
 export default function AdminDashboard() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -10,6 +11,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [employeeData, setEmployeeData] = useState({});
+  const [activeTab, setActiveTab] = useState('attendance');
 
   useEffect(() => {
     loadAttendanceData();
@@ -114,76 +116,111 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          </div>
-        ) : error ? (
-          <div className="text-red-500 text-sm text-center bg-red-50 p-4 rounded">
-            {error}
+        {/* Pestañas de navegación */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('attendance')}
+              className={`${
+                activeTab === 'attendance'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Asistencias
+            </button>
+            <button
+              onClick={() => setActiveTab('locations')}
+              className={`${
+                activeTab === 'locations'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Ubicaciones
+            </button>
+          </nav>
+        </div>
+
+        {/* Contenido de las pestañas */}
+        {activeTab === 'attendance' ? (
+          <div className="attendance-section">
+            {loading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+              </div>
+            ) : error ? (
+              <div className="text-red-500 text-sm text-center bg-red-50 p-4 rounded">
+                {error}
+              </div>
+            ) : (
+              <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Registros de Asistencia
+                  </h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Empleado
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Entrada
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Salida
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Horas Trabajadas
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Ubicación
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {Object.entries(groupedRecords).map(([userId, records]) => {
+                        const userData = employeeData[userId] || {};
+                        const entrada = records.find(r => r.type === 'entrada');
+                        const salida = records.find(r => r.type === 'salida');
+                        
+                        return (
+                          <tr key={userId}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {userData.name} {userData.lastName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {userData.email}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {formatDate(entrada?.timestamp)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {formatDate(salida?.timestamp)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {calculateHours(records)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {formatLocation(entrada?.location)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Registros de Asistencia
-              </h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Empleado
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Entrada
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Salida
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Horas Trabajadas
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ubicación
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {Object.entries(groupedRecords).map(([userId, records]) => {
-                    const userData = employeeData[userId] || {};
-                    const entrada = records.find(r => r.type === 'entrada');
-                    const salida = records.find(r => r.type === 'salida');
-                    
-                    return (
-                      <tr key={userId}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {userData.name} {userData.lastName}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {userData.email}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(entrada?.timestamp)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(salida?.timestamp)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {calculateHours(records)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatLocation(entrada?.location)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          <div className="locations-section">
+            <LocationsManager />
           </div>
         )}
       </div>
