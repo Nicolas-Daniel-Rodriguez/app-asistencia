@@ -1,0 +1,1 @@
+{"name":"Assistance System","short_name":"AS","start_url":"/","display":"standalone","background_color":"#ffffff","lang":"en","scope":"/","description":"Sistema de Control de Asistencia","theme_color":"#4F46E5","icons":[{"src":"/AS-Logo-192.png","sizes":"192x192","type":"image/png"},{"src":"/AS-Logo-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
