@@ -5,7 +5,9 @@ const urlsToCache = [
   '/app-asistencia/manifest.webmanifest',
   '/app-asistencia/AS-Logo-192.png',
   '/app-asistencia/AS-Logo-512.png',
-  // Agrega aquí otros recursos que quieras que estén disponibles offline
+  // Agregar los assets principales de la aplicación
+  '/app-asistencia/assets/index.css',
+  '/app-asistencia/assets/index.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -16,10 +18,17 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Asegurarse de que las solicitudes siempre vayan al path correcto
+  const url = new URL(event.request.url);
+  if (url.origin === self.location.origin && !url.pathname.startsWith('/app-asistencia/')) {
+    const newUrl = new URL('/app-asistencia' + url.pathname, url.origin);
+    event.respondWith(fetch(newUrl));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Cache hit - return response
         if (response) {
           return response;
         }

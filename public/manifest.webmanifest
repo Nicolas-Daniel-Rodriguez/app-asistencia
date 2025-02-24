@@ -3,6 +3,7 @@
   "short_name": "AS",
   "description": "Sistema de Control de Asistencia",
   "start_url": "/app-asistencia/",
+  "scope": "/app-asistencia/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4F46E5",

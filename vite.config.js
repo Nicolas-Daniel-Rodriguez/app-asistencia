@@ -15,8 +15,8 @@ export default defineConfig({
         theme_color: '#4F46E5',
         background_color: '#ffffff',
         display: 'standalone',
-        scope: '/',
-        start_url: '/',
+        scope: '/app-asistencia/',
+        start_url: '/app-asistencia/',
         icons: [
           {
             src: '/app-asistencia/AS-Logo-192.png',
