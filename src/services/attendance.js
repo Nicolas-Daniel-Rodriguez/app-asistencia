@@ -31,6 +31,14 @@ export const registerAttendance = async (userId, type, location) => {
       return { error: 'No hay ubicaciones configuradas en el sistema' };
     }
 
+    // Verificar si ya existe un registro del mismo tipo para hoy
+    const today = new Date().toISOString().split('T')[0];
+    const existingRecord = await getEmployeeAttendance(userId, today);
+    
+    if (existingRecord.records.some(record => record.type === type)) {
+      return { error: `Ya has registrado tu ${type} el día de hoy` };
+    }
+
     // Calcular la distancia a cada ubicación y encontrar la más cercana
     let nearestLocation = null;
     let shortestDistance = Infinity;
@@ -69,7 +77,7 @@ export const registerAttendance = async (userId, type, location) => {
         distanceToLocation: Math.round(shortestDistance)
       },
       timestamp,
-      date: timestamp.toISOString().split('T')[0],
+      date: today
     });
 
     return { 
@@ -78,7 +86,8 @@ export const registerAttendance = async (userId, type, location) => {
       locationName: nearestLocation.name
     };
   } catch (error) {
-    return { error: error.message };
+    console.error('Error registering attendance:', error);
+    return { error: 'Error al registrar la asistencia' };
   }
 };
 
@@ -107,15 +116,10 @@ export const getEmployeeAttendance = async (userId, date) => {
 
 export const getAllEmployeesAttendance = async (date) => {
   try {
-    // Convertir la fecha a timestamp de inicio y fin del día
-    const startDate = new Date(date + 'T00:00:00');
-    const endDate = new Date(date + 'T23:59:59');
-
-    // Crear la consulta para obtener los registros del día
+    const attendanceRef = collection(db, 'attendance');
     const q = query(
-      collection(db, 'attendance'),
-      where('timestamp', '>=', startDate),
-      where('timestamp', '<=', endDate),
+      attendanceRef,
+      where('date', '==', date),
       orderBy('timestamp', 'asc')
     );
 
