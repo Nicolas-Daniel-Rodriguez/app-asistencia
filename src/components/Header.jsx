@@ -1,10 +1,26 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { logoutUser } from '../services/auth';
+import { useState, useEffect } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 export default function Header() {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setUserData(userDoc.data());
+        }
+      }
+    };
+    loadUserData();
+  }, [user]);
 
   const handleLogout = async () => {
     await logoutUser();
@@ -20,7 +36,11 @@ export default function Header() {
         {user && (
           <div className="flex items-center space-x-4">
             <span className="text-gray-700">
-              {user.email} ({userRole})
+              {userData ? (
+                `${userData.name} ${userData.lastName} (${userRole === 'admin' ? 'Admin' : 'Empleado'})`
+              ) : (
+                `${user.email} (${userRole === 'admin' ? 'Admin' : 'Empleado'})`
+              )}
             </span>
             <button
               onClick={handleLogout}

@@ -32,8 +32,8 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
-      <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 p-4 overflow-x-hidden">
+      <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10 my-4">
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
             Bienvenido

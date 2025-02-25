@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Register from './pages/Register';
+import Version from './components/Version';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
               <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
           </main>
+          <Version />
         </div>
       </AuthProvider>
     </Router>

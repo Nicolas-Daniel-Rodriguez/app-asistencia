@@ -31,12 +31,24 @@ export const registerAttendance = async (userId, type, location) => {
       return { error: 'No hay ubicaciones configuradas en el sistema' };
     }
 
-    // Verificar si ya existe un registro del mismo tipo para hoy
+    // Verificar registros existentes
     const today = new Date().toISOString().split('T')[0];
     const existingRecord = await getEmployeeAttendance(userId, today);
     
-    if (existingRecord.records.some(record => record.type === type)) {
-      return { error: `Ya has registrado tu ${type} el día de hoy` };
+    if (type === 'entrada') {
+      // Verificar si hay una entrada sin salida
+      const lastEntry = existingRecord.records.filter(r => r.type === 'entrada').length;
+      const lastExit = existingRecord.records.filter(r => r.type === 'salida').length;
+      if (lastEntry > lastExit) {
+        return { error: 'Ya tienes una entrada registrada sin salida' };
+      }
+    } else if (type === 'salida') {
+      // Verificar si hay una entrada sin salida
+      const lastEntry = existingRecord.records.filter(r => r.type === 'entrada').length;
+      const lastExit = existingRecord.records.filter(r => r.type === 'salida').length;
+      if (lastEntry <= lastExit) {
+        return { error: 'Debes registrar una entrada antes de registrar una salida' };
+      }
     }
 
     // Calcular la distancia a cada ubicación y encontrar la más cercana
@@ -57,8 +69,8 @@ export const registerAttendance = async (userId, type, location) => {
       }
     });
 
-    // Verificar si está dentro del radio permitido de la ubicación más cercana
-    if (shortestDistance > nearestLocation.radius) {
+    // Solo validar el radio permitido si es una entrada
+    if (type === 'entrada' && shortestDistance > nearestLocation.radius) {
       return {
         error: `Ubicación fuera del rango permitido. Estás a ${Math.round(shortestDistance)}m de ${nearestLocation.name}. Máximo permitido: ${nearestLocation.radius}m`
       };
