@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { registerAttendance } from "../services/attendance";
-import { getEmployeeAttendance } from "../services/attendance";
+import { registerAttendance, getEmployeeAttendance, updateAttendanceNote } from "../services/attendance";
 import LocationModal from "../components/LocationModal";
 import LocationsManager from "../components/LocationsManager";
 
@@ -14,6 +13,8 @@ export default function EmployeeDashboard() {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [editingNote, setEditingNote] = useState(null);
+  const [noteText, setNoteText] = useState("");
 
   const getCurrentLocation = () => {
     if ("geolocation" in navigator) {
@@ -90,6 +91,42 @@ export default function EmployeeDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNoteClick = (record) => {
+    setEditingNote(record.id);
+    setNoteText(record.note || "");
+  };
+
+  const handleNoteSave = async () => {
+    try {
+      setLoading(true);
+      const { error: noteError } = await updateAttendanceNote(editingNote, user.uid, noteText);
+      
+      if (noteError) {
+        setError(noteError);
+      } else {
+        // Actualizar el registro localmente
+        setAttendanceRecords(records => 
+          records.map(record => 
+            record.id === editingNote 
+              ? { ...record, note: noteText || null }
+              : record
+          )
+        );
+        setEditingNote(null);
+        setNoteText("");
+      }
+    } catch (err) {
+      setError("Error al guardar la novedad");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNoteCancel = () => {
+    setEditingNote(null);
+    setNoteText("");
   };
 
   // Historial de asistencias
@@ -201,31 +238,55 @@ export default function EmployeeDashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ubicación
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Novedades
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {attendanceRecords.map((record, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="capitalize">{record.type}</span>
+                  {attendanceRecords.map((record) => (
+                    <tr key={record.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {record.type === "entrada" ? "Entrada" : "Salida"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(record.timestamp)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {record.location ? (
-                          <button
-                            onClick={() => {
-                              setSelectedLocation(record.location);
-                              setIsMapModalOpen(true);
-                            }}
-                            className="text-indigo-600 hover:text-indigo-900 hover:underline"
-                          >
-                            {record.location.nearestLocationName ||
-                              "Ver ubicación"}
-                          </button>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {record.location?.nearestLocationName || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {editingNote === record.id ? (
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="text"
+                              value={noteText}
+                              onChange={(e) => setNoteText(e.target.value)}
+                              className="flex-1 px-2 py-1 border rounded text-gray-700"
+                              placeholder="Ingrese novedad..."
+                            />
+                            <button
+                              onClick={handleNoteSave}
+                              disabled={loading}
+                              className="text-green-600 hover:text-green-800"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={handleNoteCancel}
+                              disabled={loading}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         ) : (
-                          "-"
+                          <button
+                            onClick={() => handleNoteClick(record)}
+                            className="text-indigo-600 hover:text-indigo-900 hover:underline text-left w-full"
+                          >
+                            {record.note || "Agregar novedad"}
+                          </button>
                         )}
                       </td>
                     </tr>

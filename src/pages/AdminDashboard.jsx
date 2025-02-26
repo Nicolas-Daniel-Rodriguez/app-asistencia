@@ -324,6 +324,12 @@ export default function AdminDashboard() {
                           >
                             Ubicación
                           </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Novedades
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -341,9 +347,19 @@ export default function AdminDashboard() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {formatDate(pair.entrada?.timestamp)}
+                                {pair.entrada?.note && (
+                                  <div className="text-xs text-indigo-600 mt-1">
+                                    Novedad: {pair.entrada.note}
+                                  </div>
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {formatDate(pair.salida?.timestamp) || "En curso"}
+                                {pair.salida?.note && (
+                                  <div className="text-xs text-indigo-600 mt-1">
+                                    Novedad: {pair.salida.note}
+                                  </div>
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {pair.salida
@@ -352,6 +368,22 @@ export default function AdminDashboard() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {formatLocation(pair.entrada?.location)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {(pair.entrada?.note || pair.salida?.note) ? (
+                                  <div>
+                                    {pair.entrada?.note && (
+                                      <div className="mb-1">
+                                        <span className="font-medium">Entrada:</span> {pair.entrada.note}
+                                      </div>
+                                    )}
+                                    {pair.salida?.note && (
+                                      <div>
+                                        <span className="font-medium">Salida:</span> {pair.salida.note}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : "-"}
                               </td>
                             </tr>
                           ));

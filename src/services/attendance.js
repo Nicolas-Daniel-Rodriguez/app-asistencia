@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, orderBy, doc, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { getLocations } from './locations';
 
@@ -100,6 +100,19 @@ export const registerAttendance = async (userId, type, location) => {
   } catch (error) {
     console.error('Error registering attendance:', error);
     return { error: 'Error al registrar la asistencia' };
+  }
+};
+
+export const updateAttendanceNote = async (attendanceId, userId, note) => {
+  try {
+    const attendanceRef = doc(db, 'attendance', attendanceId);
+    await updateDoc(attendanceRef, {
+      note: note || deleteField() // Si note es null o vacío, elimina el campo
+    });
+    return { error: null };
+  } catch (error) {
+    console.error('Error updating attendance note:', error);
+    return { error: 'Error al actualizar la novedad' };
   }
 };
 
