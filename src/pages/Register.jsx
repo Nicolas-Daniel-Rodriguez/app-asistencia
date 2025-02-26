@@ -17,15 +17,19 @@ export default function Register() {
     setError('');
     setSuccess('');
 
+    // Crear un objeto con los datos adicionales del usuario
     const userData = {
       name,
-      lastName,
-      email,
-      password,
-      role
+      lastName
     };
 
-    const { error: registrationError } = await createUserWithRole(userData);
+    // Llamar a createUserWithRole con los parámetros separados
+    const { error: registrationError } = await createUserWithRole(
+      email,
+      password,
+      role,
+      userData
+    );
     
     if (registrationError) {
       setError(registrationError);
@@ -37,6 +41,15 @@ export default function Register() {
     setPassword('');
     setName('');
     setLastName('');
+
+    // Esperar 2 segundos y redirigir según el rol
+    setTimeout(() => {
+      if (role === 'admin') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/employee-dashboard');
+      }
+    }, 2000);
   };
 
   return (
