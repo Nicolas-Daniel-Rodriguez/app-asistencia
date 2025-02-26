@@ -116,7 +116,11 @@ export default function AdminDashboard() {
     }, {})
   ).map(([userId, records]) => {
     // Ordenar registros por timestamp
-    const sortedRecords = records.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const sortedRecords = records.sort((a, b) => {
+      const timeA = a.timestamp.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+      const timeB = b.timestamp.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+      return timeA - timeB;
+    });
     
     // Separar entradas y salidas
     const entradas = sortedRecords.filter(r => r.type === "entrada");
@@ -125,9 +129,12 @@ export default function AdminDashboard() {
     // Crear pares de entrada-salida
     const pairs = entradas.map((entrada, index) => {
       // Buscar la primera salida que sea posterior a esta entrada
-      const salida = salidas.find(s => 
-        new Date(s.timestamp) > new Date(entrada.timestamp)
-      );
+      const entradaTime = entrada.timestamp.toDate ? entrada.timestamp.toDate() : new Date(entrada.timestamp);
+      
+      const salida = salidas.find(s => {
+        const salidaTime = s.timestamp.toDate ? s.timestamp.toDate() : new Date(s.timestamp);
+        return salidaTime > entradaTime;
+      });
       
       // Si encontramos una salida correspondiente, la removemos de la lista
       if (salida) {
