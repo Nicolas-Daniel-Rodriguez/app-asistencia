@@ -5,6 +5,8 @@ import {
   deleteLocation,
   getLocations,
 } from "../services/locations";
+import { getLocationScheduleConfig, updateLocationScheduleConfig } from '../services/scheduleConfig';
+import ScheduleConfig from './ScheduleConfig';
 
 export default function LocationsManager() {
   const [locations, setLocations] = useState([]);
@@ -14,6 +16,7 @@ export default function LocationsManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [showScheduleConfig, setShowScheduleConfig] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     latitude: "",
@@ -98,6 +101,11 @@ export default function LocationsManager() {
   const handleViewMap = (location) => {
     setSelectedLocation(location);
     setIsMapModalOpen(true);
+  };
+
+  const handleScheduleConfig = (location) => {
+    setSelectedLocation(location);
+    setShowScheduleConfig(true);
   };
 
   return (
@@ -340,18 +348,24 @@ export default function LocationsManager() {
                   </td>
                   <td data-label="Acciones" className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="button-group">
-                    <button
-                      onClick={() => handleEdit(location)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-4 px-3 py-1 rounded-md bg-indigo-100"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(location.id)}
-                      className="text-red-600 hover:text-red-900 px-3 py-1 rounded-md bg-red-100"
-                    >
-                      Eliminar
-                    </button>
+                      <button
+                        onClick={() => handleScheduleConfig(location)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                      >
+                        Configurar Horarios
+                      </button>
+                      <button
+                        onClick={() => handleEdit(location)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(location.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Eliminar
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -360,6 +374,36 @@ export default function LocationsManager() {
           </table>
         </div>
       </div>
+
+      {/* Modal de Configuración de Horarios */}
+      {showScheduleConfig && selectedLocation && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div className="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Configurar Horarios - {selectedLocation.name}
+                </h3>
+                <button
+                  onClick={() => setShowScheduleConfig(false)}
+                  className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
+                >
+                  <span className="sr-only">Cerrar</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <ScheduleConfig 
+                locationId={selectedLocation.id} 
+                onClose={() => setShowScheduleConfig(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

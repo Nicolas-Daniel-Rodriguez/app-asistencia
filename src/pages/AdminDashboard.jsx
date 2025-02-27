@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { getAllEmployeesAttendance } from "../services/attendance";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import LocationsManager from "../components/LocationsManager";
+import { getScheduleConfig, calculateAttendanceStatus } from "../services/scheduleConfig";
 
 export default function AdminDashboard() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -14,9 +15,13 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("attendance");
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [scheduleConfig, setScheduleConfig] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     loadAttendanceData();
+    loadScheduleConfig();
   }, [date]);
 
   const loadAttendanceData = async () => {
@@ -48,6 +53,15 @@ export default function AdminDashboard() {
       setError("Error al cargar los registros de asistencia");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadScheduleConfig = async () => {
+    try {
+      const config = await getScheduleConfig();
+      setScheduleConfig(config);
+    } catch (error) {
+      console.error('Error loading schedule config:', error);
     }
   };
 
@@ -105,6 +119,49 @@ export default function AdminDashboard() {
     );
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'onTime':
+        return 'bg-green-100 text-green-800';
+      case 'late':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'absent':
+        return 'bg-red-100 text-red-800';
+      case 'justified':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'onTime':
+        return 'En horario';
+      case 'late':
+        return 'Tarde';
+      case 'absent':
+        return 'Ausente';
+      case 'justified':
+        return 'Justificado';
+      default:
+        return 'Desconocido';
+    }
+  };
+
+  const handleJustify = async (userId, timestamp, justification) => {
+    try {
+      const attendanceRef = doc(db, "attendance", `${userId}_${timestamp}`);
+      await updateDoc(attendanceRef, {
+        justification,
+        status: "justified",
+      });
+      loadAttendanceData();
+    } catch (error) {
+      console.error("Error al justificar asistencia:", error);
+    }
+  };
+
   // Agrupar los registros por empleado y entrada/salida
   const groupedRecords = Object.entries(
     attendanceRecords.reduce((acc, record) => {
@@ -150,6 +207,21 @@ export default function AdminDashboard() {
     return { userId, pairs };
   });
 
+  const filteredRecords = groupedRecords.filter(({ userId, pairs }) => {
+    const userData = employeeData[userId] || {};
+    const nameMatch = (userData.name + " " + userData.lastName)
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    if (!nameMatch) return false;
+    if (statusFilter === "all") return true;
+
+    return pairs.some((pair) => {
+      const status = calculateAttendanceStatus(pair.entrada?.timestamp, scheduleConfig);
+      return status === statusFilter || (status === "justified" && pair.entrada?.justification);
+    });
+  });
+
   return (
     <div className="min-h-screen w-screen bg-gradient-to-r from-blue-500 to-indigo-600 p-4  overflow-x-hidden">
       <div className="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-10 my-4">
@@ -162,21 +234,39 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <div className="flex-1 max-w-xs mb-4 sm:mb-0">
-            <label
+        <label
               htmlFor="date"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Fecha
             </label>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+          
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="mb-4 md:mb-0 px-4 py-2 border rounded-md"
+          />
+          <div className="flex flex-col md:flex-row gap-4">
             <input
-              type="date"
-              id="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              type="text"
+              placeholder="Buscar empleado..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-4 py-2 border rounded-md"
             />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border rounded-md"
+            >
+              <option value="all">Todos los estados</option>
+              <option value="onTime">En horario</option>
+              <option value="late">Tarde</option>
+              <option value="absent">Ausente</option>
+              <option value="justified">Justificado</option>
+            </select>
           </div>
         </div>
 
@@ -242,30 +332,30 @@ export default function AdminDashboard() {
         )}
 
         {/* Pestañas de navegación */}
-        <div className="border-b border-gray-200 mb-6 pb-4">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab("attendance")}
-              className={`${
-                activeTab === "attendance"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-700 hover:text-gray-800 hover:border-gray-300"
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-            >
-              Asistencias
-            </button>
-            <button
-              onClick={() => setActiveTab("locations")}
-              className={`${
-                activeTab === "locations"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-700 hover:text-gray-800 hover:border-gray-300"
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-            >
-              Ubicaciones
-            </button>
-          </nav>
-        </div>
+        <div className="border-b border-gray-200 mb-6">
+  <nav className="-mb-px flex space-x-8">
+    <button
+      onClick={() => setActiveTab("attendance")}
+      className={`${
+        activeTab === "attendance"
+          ? "border-indigo-500 text-indigo-600"
+          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+    >
+      Asistencias
+    </button>
+    <button
+      onClick={() => setActiveTab("locations")}
+      className={`${
+        activeTab === "locations"
+          ? "border-indigo-500 text-indigo-600"
+          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+    >
+      Ubicaciones
+    </button>
+  </nav>
+</div>
 
         {/* Contenido de las pestañas */}
         {activeTab === "attendance" ? (
@@ -278,7 +368,7 @@ export default function AdminDashboard() {
               <div className="text-red-500 text-sm text-center bg-red-50 p-4 rounded">
                 {error}
               </div>
-            ) : Object.keys(groupedRecords).length === 0 ? (
+            ) : Object.keys(filteredRecords).length === 0 ? (
               <div className="text-gray-500 text-sm text-center bg-gray-50 p-4 rounded">
                 No hay registros de asistencia para esta fecha
               </div>
@@ -333,7 +423,7 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {groupedRecords.map(({ userId, pairs }) => {
+                        {filteredRecords.map(({ userId, pairs }) => {
                           const userData = employeeData[userId] || {};
                           return pairs.map((pair, index) => (
                             <tr key={`${userId}-${index}`}>
@@ -346,12 +436,39 @@ export default function AdminDashboard() {
                                 </div>
                               </td>
                               <td data-label="Entrada" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {formatDate(pair.entrada?.timestamp)}
-                                {pair.entrada?.note && (
-                                  <div className="text-xs text-indigo-600 mt-1">
-                                    Nota: {pair.entrada.note}
-                                  </div>
-                                )}
+                                <div>
+                                  {formatDate(pair.entrada?.timestamp)}
+                                  {pair.entrada?.timestamp && scheduleConfig && (
+                                    <div className="mt-1">
+                                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(calculateAttendanceStatus(pair.entrada.timestamp, scheduleConfig))}`}>
+                                        {getStatusText(calculateAttendanceStatus(pair.entrada.timestamp, scheduleConfig))}
+                                      </span>
+                                      {!pair.entrada.justification && calculateAttendanceStatus(pair.entrada.timestamp, scheduleConfig) !== 'onTime' && (
+                                        <button
+                                          onClick={() => {
+                                            const justification = prompt('Ingrese la justificación:');
+                                            if (justification) {
+                                              handleJustify(userId, pair.entrada.timestamp.seconds, justification);
+                                            }
+                                          }}
+                                          className="ml-2 text-xs text-indigo-600 hover:text-indigo-800"
+                                        >
+                                          Justificar
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                  {pair.entrada?.justification && (
+                                    <div className="text-xs text-indigo-600 mt-1">
+                                      Justificación: {pair.entrada.justification}
+                                    </div>
+                                  )}
+                                  {pair.entrada?.note && (
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      Nota: {pair.entrada.note}
+                                    </div>
+                                  )}
+                                </div>
                               </td>
                               <td data-label="Salida" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {formatDate(pair.salida?.timestamp) || "En curso"}
@@ -396,9 +513,7 @@ export default function AdminDashboard() {
             )}
           </div>
         ) : (
-          <div className="locations-section">
-            <LocationsManager />
-          </div>
+          <LocationsManager />
         )}
       </div>
     </div>

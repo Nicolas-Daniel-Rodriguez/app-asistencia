@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { registerAttendance, getEmployeeAttendance, updateAttendanceNote } from "../services/attendance";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../config/firebase";
+import { getScheduleConfig, calculateAttendanceStatus } from "../services/scheduleConfig";
 import LocationModal from "../components/LocationModal";
 import LocationsManager from "../components/LocationsManager";
 
@@ -15,6 +18,7 @@ export default function EmployeeDashboard() {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [editingNote, setEditingNote] = useState(null);
   const [noteText, setNoteText] = useState("");
+  const [scheduleConfig, setScheduleConfig] = useState(null);
 
   const getCurrentLocation = () => {
     if ("geolocation" in navigator) {
@@ -157,6 +161,19 @@ export default function EmployeeDashboard() {
     }
   };
 
+  useEffect(() => {
+    loadScheduleConfig();
+  }, []);
+
+  const loadScheduleConfig = async () => {
+    try {
+      const config = await getScheduleConfig();
+      setScheduleConfig(config);
+    } catch (error) {
+      console.error('Error loading schedule config:', error);
+    }
+  };
+
   const formatDate = (timestamp) => {
     if (!timestamp) return "-";
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -168,6 +185,36 @@ export default function EmployeeDashboard() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'onTime':
+        return 'bg-green-100 text-green-800';
+      case 'late':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'absent':
+        return 'bg-red-100 text-red-800';
+      case 'justified':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'onTime':
+        return 'En horario';
+      case 'late':
+        return 'Tarde';
+      case 'absent':
+        return 'Ausente';
+      case 'justified':
+        return 'Justificado';
+      default:
+        return 'Desconocido';
+    }
   };
 
   return (
@@ -250,7 +297,21 @@ export default function EmployeeDashboard() {
                         {record.type === "entrada" ? "Entrada" : "Salida"}
                       </td>
                       <td data-label="Fecha y Hora" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(record.timestamp)}
+                        <div>
+                          {formatDate(record.timestamp)}
+                          {record.type === "entrada" && record.timestamp && scheduleConfig && (
+                            <div className="mt-1">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(calculateAttendanceStatus(record.timestamp, scheduleConfig))}`}>
+                                {getStatusText(calculateAttendanceStatus(record.timestamp, scheduleConfig))}
+                              </span>
+                            </div>
+                          )}
+                          {record.justification && (
+                            <div className="text-xs text-indigo-600 mt-1">
+                              Justificación: {record.justification}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td data-label="Ubicación" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex flex-col">
