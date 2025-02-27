@@ -226,7 +226,7 @@ export default function EmployeeDashboard() {
           </div>
           <div className="overflow-hidden">
             <div className="max-h-[280px] overflow-y-auto overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="responsive-table min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -239,46 +239,60 @@ export default function EmployeeDashboard() {
                       Ubicación
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Novedades
+                      Notas
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {attendanceRecords.map((record) => (
                     <tr key={record.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td data-label="Tipo" className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {record.type === "entrada" ? "Entrada" : "Salida"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td data-label="Fecha y Hora" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(record.timestamp)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {record.location?.nearestLocationName || "-"}
+                      <td data-label="Ubicación" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex flex-col">
+                          {record.location && (
+                            <button
+                              onClick={() => {
+                                setSelectedLocation(record.location);
+                                setIsMapModalOpen(true);
+                              }}
+                              className="text-indigo-600 hover:text-indigo-900 hover:underline mt-1 text-left"
+                            >
+                              {record.location?.nearestLocationName || "-"}
+                            </button>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td data-label="Notas" className="px-6 py-4 whitespace-nowrap text-sm">
                         {editingNote === record.id ? (
-                          <div className="flex items-center space-x-2">
+                          <div className="flex flex-col">
                             <input
                               type="text"
                               value={noteText}
                               onChange={(e) => setNoteText(e.target.value)}
-                              className="flex-1 px-2 py-1 border rounded text-gray-700"
+                              className="w-full px-2 py-1 border rounded text-gray-700 mb-2"
                               placeholder="Ingrese novedad..."
                             />
-                            <button
-                              onClick={handleNoteSave}
-                              disabled={loading}
-                              className="text-green-600 hover:text-green-800"
-                            >
-                              ✓
-                            </button>
-                            <button
-                              onClick={handleNoteCancel}
-                              disabled={loading}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              ✕
-                            </button>
+                            <div className="button-group">
+                              <button
+                                onClick={handleNoteSave}
+                                disabled={loading}
+                                className="text-green-600 hover:text-green-800 px-3 py-1"
+                              >
+                              Guardar
+                              </button>
+                              <button
+                                onClick={handleNoteCancel}
+                                disabled={loading}
+                                className="text-red-600 hover:text-red-800 px-3 py-1"
+                              >
+                              Cancelar
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <button

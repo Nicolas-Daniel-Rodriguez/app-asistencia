@@ -304,19 +304,19 @@ export default function LocationsManager() {
       {/* Tabla de ubicaciones */}
       <div className="overflow-hidden">
         <div className="bg-white shadow-md rounded-lg max-h-[280px] overflow-y-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="responsive-table min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Nombre
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Coordenadas
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Radio
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
@@ -324,33 +324,35 @@ export default function LocationsManager() {
             <tbody className="bg-white divide-y divide-gray-200">
               {locations.map((location) => (
                 <tr key={location.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td data-label="Nombre" className="px-6 py-4 whitespace-nowrap">
                     {location.name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td data-label="Coordenadas" className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => handleViewMap(location)}
-                      className="text-indigo-600 hover:text-indigo-900"
+                      className="text-indigo-600 hover:text-indigo-900 p-0"
                     >
                       {location.latitude}, {location.longitude}
                     </button>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td data-label="Radio" className="px-6 py-4 whitespace-nowrap">
                     {location.radius}m
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td data-label="Acciones" className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="button-group">
                     <button
                       onClick={() => handleEdit(location)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-4"
+                      className="text-indigo-600 hover:text-indigo-900 mr-4 px-3 py-1 rounded-md bg-indigo-100"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleDelete(location.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-red-600 hover:text-red-900 px-3 py-1 rounded-md bg-red-100"
                     >
                       Eliminar
                     </button>
+                    </div>
                   </td>
                 </tr>
               ))}

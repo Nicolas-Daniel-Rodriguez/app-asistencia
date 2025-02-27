@@ -242,7 +242,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Pestañas de navegación */}
-        <div className="border-b border-gray-200 mb-6">
+        <div className="border-b border-gray-200 mb-6 pb-4">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab("attendance")}
@@ -289,9 +289,9 @@ export default function AdminDashboard() {
                     Registros de Asistencia
                   </h3>
                 </div>
-                <div className="overflow-hidden">
+                <div className="overflow-x-auto">
                   <div className="max-h-[280px] overflow-y-auto overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    <table className="responsive-table min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
                           <th
@@ -328,7 +328,7 @@ export default function AdminDashboard() {
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
-                            Novedades
+                            Notas
                           </th>
                         </tr>
                       </thead>
@@ -337,7 +337,7 @@ export default function AdminDashboard() {
                           const userData = employeeData[userId] || {};
                           return pairs.map((pair, index) => (
                             <tr key={`${userId}-${index}`}>
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td data-label="Empleado" className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
                                   {userData.name} {userData.lastName}
                                 </div>
@@ -345,31 +345,31 @@ export default function AdminDashboard() {
                                   {userData.email}
                                 </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td data-label="Entrada" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {formatDate(pair.entrada?.timestamp)}
                                 {pair.entrada?.note && (
                                   <div className="text-xs text-indigo-600 mt-1">
-                                    Novedad: {pair.entrada.note}
+                                    Nota: {pair.entrada.note}
                                   </div>
                                 )}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td data-label="Salida" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {formatDate(pair.salida?.timestamp) || "En curso"}
                                 {pair.salida?.note && (
                                   <div className="text-xs text-indigo-600 mt-1">
-                                    Novedad: {pair.salida.note}
+                                    Nota: {pair.salida.note}
                                   </div>
                                 )}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td data-label="Horas Trabajadas" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {pair.salida
                                   ? calculateHours([pair.entrada, pair.salida])
                                   : "En curso"}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td data-label="Ubicación" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {formatLocation(pair.entrada?.location)}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td data-label="Notas" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {(pair.entrada?.note || pair.salida?.note) ? (
                                   <div>
                                     {pair.entrada?.note && (
